@@ -1,0 +1,60 @@
+﻿~Ctrl:: ; This captures the Ctrl key
+    if (A_PriorHotkey = "~Ctrl" and A_TimeSincePriorHotkey < 200) { ; Check if Ctrl is pressed twice within 400 ms
+        ; Create the input box with a fixed gray outline
+        Gui, Add, Edit, vUserInput w250 h25 Border,  ; Create an editable input box with gray outline (Border)
+
+        ; Customize the appearance of the window to look clean and Apple-like
+        Gui, -Caption  ; Remove the window title
+
+        linesRequired := Ceil(textLength / 30)  ; Assuming 30 characters per line
+        GuiHeight := Max(80, 25 + (linesRequired * 30))  ; Dynamically adjust height based on lines
+        GuiHeight := GuiHeight -40
+
+        Gui, Color, F2F2F2  ; Light gray background color
+        Gui, Show, w270 h40,  ; Show the GUI with a default size initially
+
+        ; Flag to track that Ctrl double-press has happened
+        ctrlPressed := true
+        return
+    }
+return
+
+~Enter:: ; Submit when Enter is pressed
+    if (ctrlPressed) { ; Only submit if Ctrl was pressed twice
+        Gui, Submit  ; Save the input value to the variable
+        UserInput := UserInput  ; Store the value in the variable
+
+        ; Trim any extra spaces
+        StringTrimRight, UserInput, UserInput, 0
+
+        ; Dynamically calculate the height based on the content
+        StringLen, textLength, UserInput
+        linesRequired := Ceil(textLength / 30)  ; Assuming 30 characters per line
+        GuiHeight := Max(80, 25 + (linesRequired * 30))  ; Dynamically adjust height based on lines
+
+        ; Show the GUI with the calculated height
+        Gui, Show, w270 h%GuiHeight%,  ; Adjust the height of the window accordingly
+
+        ; Check the input prefix and perform actions accordingly
+        if (SubStr(UserInput, 1, 3) = "cmd") { ; If input starts with "cmd"
+            ; Strip "cmd " from the input and execute it in the command prompt
+            CmdInput := SubStr(UserInput, 5) ; Remove "cmd "
+            Run, % "cmd.exe /K " CmdInput
+        }
+        else if (UserInput = "") { ; If input is empty (just Enter pressed)
+            MsgBox, Please enter something to search.
+        }
+        else if (SubStr(UserInput, 1, 3) = "gpt") { ; If input starts with "gpt"
+            ; Strip "gpt " from the input and search on ChatGPT with the new URL format
+            GptQuery := SubStr(UserInput, 5)
+            Run, https://chat.openai.com/?q=%GptQuery%  ; Open ChatGPT with the query
+        }
+        else { ; If input is a search term, search it on the browser
+            Run, https://www.google.com/search?q=%UserInput% ; Google search
+        }
+
+        ; Close the current window
+        Gui, Destroy
+        ctrlPressed := false  ; Reset flag so the function can be triggered again
+    }
+return
