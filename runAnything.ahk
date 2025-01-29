@@ -1,14 +1,18 @@
-﻿~Ctrl:: ; This captures the Ctrl key
+﻿#SingleInstance force  ; Only allow one instance of the script to run
+
+~Ctrl:: ; This captures the Ctrl key
     if (A_PriorHotkey = "~Ctrl" and A_TimeSincePriorHotkey < 200) { ; Check if Ctrl is pressed twice within 200 ms
         ; Create the input box with a fixed gray outline
-        Gui, Add, Edit, vUserInput w250 h25 Border,  ; Create an editable input box with gray outline (Border)
+        Gui, Add, Edit, vUserInput w250 h25,  ; Create an editable input box with gray outline (Border)
 
         ; Customize the appearance of the window to look clean and Apple-like
         Gui, -Caption  ; Remove the window title
+        Gui, Font,, Segoe UI  ; Set the font to Segoe UI
+        Gui, Margin, 1, 1
 
         Gui, Color, F2F2F2  ; Light gray background color
         Gui, Show, w270 h40,  ; Show the GUI with a default size initially
-
+        WinSet, Region, 0-0 w270, h40 R20-20
         ; Flag to track that Ctrl double-press has happened
         ctrlPressed := true
         return
@@ -29,7 +33,7 @@ return
         GuiHeight := Max(80, 25 + (linesRequired * 30))  ; Dynamically adjust height based on lines
 
         ; Show the GUI with the calculated height
-        Gui, Show, w270 h%GuiHeight%,  ; Adjust the height of the window accordingly
+        Gui, Show, w250 h%GuiHeight%,  ; Adjust the height of the window accordingly
 
         ; Check the input prefix and perform actions accordingly
         if (SubStr(UserInput, 1, 3) = "cmd") { ; If input starts with "cmd"
