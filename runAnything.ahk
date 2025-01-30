@@ -1,7 +1,7 @@
 ﻿#SingleInstance force  ; Only allow one instance of the script to run
 
 ~Ctrl:: ; This captures the Ctrl key
-    if (A_PriorHotkey = "~Ctrl" and A_TimeSincePriorHotkey < 200) { ; Check if Ctrl is pressed twice within 200 ms
+    if (A_PriorHotkey = "~Ctrl" and A_TimeSincePriorHotkey < 300) { ; Check if Ctrl is pressed twice within 200 ms
         ; Create the input box with a fixed gray outline
         Gui, Add, Edit, vUserInput w250 h25,  ; Create an editable input box with gray outline (Border)
 
@@ -33,7 +33,7 @@ return
         GuiHeight := Max(80, 25 + (linesRequired * 30))  ; Dynamically adjust height based on lines
 
         ; Show the GUI with the calculated height
-        Gui, Show, w250 h%GuiHeight%,  ; Adjust the height of the window accordingly
+        Gui, Show, w250 h40,  ; Adjust the height of the window accordingly
 
         ; Check the input prefix and perform actions accordingly
         if (SubStr(UserInput, 1, 3) = "cmd") { ; If input starts with "cmd"
