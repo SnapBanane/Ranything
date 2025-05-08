@@ -1,61 +1,74 @@
-﻿#SingleInstance force  ; Only allow one instance of the script to run
+﻿#SingleInstance force
 
-~Ctrl:: ; This captures the Ctrl key
-    if (A_PriorHotkey = "~Ctrl" and A_TimeSincePriorHotkey < 300) { ; Check if Ctrl is pressed twice within 200 ms
-        ; Create the input box with a fixed gray outline
-        Gui, Add, Edit, vUserInput w250 h25,  ; Create an editable input box with gray outline (Border)
+lastCtrlTime := 0
+ctrlTapCount := 0
+ctrlTapTimerRunning := false
 
-        ; Customize the appearance of the window to look clean and Apple-like
-        Gui, -Caption  ; Remove the window title
-        Gui, Font,, Segoe UI  ; Set the font to Segoe UI
-        Gui, Margin, 1, 1
+~Ctrl up::
+{
+    now := A_TickCount
+    elapsed := now - lastCtrlTime
+    lastCtrlTime := now
 
-        Gui, Color, F2F2F2  ; Light gray background color
-        Gui, Show, w270 h40,  ; Show the GUI with a default size initially
-        WinSet, Region, 0-0 w270, h40 R20-20
-        ; Flag to track that Ctrl double-press has happened
-        ctrlPressed := true
-        return
+    ; If more than 300ms passed, reset tap count
+    if (elapsed > 300) {
+        ctrlTapCount := 0
     }
+
+    ctrlTapCount += 1
+
+    ; Ignore if more than 2 taps
+    if (ctrlTapCount > 2)
+        return
+
+    ; Start/reset 1s timer to clear state
+    SetTimer, ResetCtrlTap, -1000
+    ctrlTapTimerRunning := true
+
+    ; Trigger GUI if second tap within 300ms
+    if (ctrlTapCount = 2) {
+        ctrlTapCount := 99  ; prevent further triggers until reset
+        ShowInputGui()
+    }
+}
 return
 
-~Enter:: ; Submit when Enter is pressed
-    if (ctrlPressed) { ; Only submit if Ctrl was pressed twice
-        Gui, Submit  ; Save the input value to the variable
-        UserInput := UserInput  ; Store the value in the variable
+ResetCtrlTap:
+ctrlTapCount := 0
+ctrlTapTimerRunning := false
+return
 
-        ; Trim any extra spaces
-        StringTrimRight, UserInput, UserInput, 0
+ShowInputGui() {
+    global
+    Gui, Destroy
+    Gui, -Caption +AlwaysOnTop
+    Gui, Font, s10, Segoe UI
+    Gui, Margin, 1, 1
+    Gui, Color, F2F2F2
+    Gui, Add, Edit, vUserInput w250 h25
+    Gui, Show, w270 h40
+    WinSet, Region, 0-0 w270 h40 R20-20
+}
 
-        ; Dynamically calculate the height based on the content
-        StringLen, textLength, UserInput
-        linesRequired := Ceil(textLength / 30)  ; Assuming 30 characters per line
-        GuiHeight := Max(80, 25 + (linesRequired * 30))  ; Dynamically adjust height based on lines
+~Enter::
+    Gui, Submit
+    UserInput := Trim(UserInput)
 
-        ; Show the GUI with the calculated height
-        Gui, Show, w250 h40,  ; Adjust the height of the window accordingly
-
-        ; Check the input prefix and perform actions accordingly
-        if (SubStr(UserInput, 1, 3) = "cmd") { ; If input starts with "cmd"
-            CmdInput := SubStr(UserInput, 5) ; Remove "cmd "
-            Run, % "cmd.exe /K " CmdInput
-        }
-        else if (UserInput = "") { ; If input is empty (just Enter pressed)
-            MsgBox, Please enter something to search.
-        }
-        else if (SubStr(UserInput, 1, 3) = "gpt") { ; If input starts with "gpt"
-            GptQuery := SubStr(UserInput, 5)
-            Run, https://chat.openai.com/?q=%GptQuery%  ; Open ChatGPT with the query
-        }
-        else if (UserInput = "shut") { ; If input is "shut"
-            Run, %ComSpec% /C shutdown /s /t 0, , Hide  ; Execute immediate shutdown
-        }
-        else { ; If input is a search term, search it on Google
-            Run, https://www.google.com/search?q=%UserInput% ; Google search
-        }
-
-        ; Close the current window
-        Gui, Destroy
-        ctrlPressed := false  ; Reset flag so the function can be triggered again
+    if (UserInput = "") {
+        return
+    } else if (SubStr(UserInput, 1, 3) = "cmd") {
+        CmdInput := SubStr(UserInput, 5)
+        Run, % "cmd.exe /K " CmdInput
+    } else if (SubStr(UserInput, 1, 3) = "gpt") {
+        GptQuery := SubStr(UserInput, 5)
+        Run, https://chat.openai.com/?q=%GptQuery%
+    } else if (UserInput = "shut") {
+        Run, %ComSpec% /C shutdown /s /t 0, , Hide
+    } else {
+        Run, https://www.google.com/search?q=%UserInput%
     }
+
+    Gui, Destroy
+    ctrlTapCount := 0
+    ctrlTapTimerRunning := false
 return
