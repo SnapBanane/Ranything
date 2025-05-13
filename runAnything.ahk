@@ -75,4 +75,8 @@ ShowInputGui() {
     Gui, Destroy
     ctrlTapCount := 0
     ctrlTapTimerRunning := false
+
+    UserInput := ""
+    GptQuery := ""
+    CmdInput := ""
 return
