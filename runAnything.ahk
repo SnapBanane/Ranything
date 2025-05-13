@@ -64,6 +64,10 @@ ShowInputGui() {
         Run, https://chat.openai.com/?q=%GptQuery%
     } else if (UserInput = "shut") {
         Run, %ComSpec% /C shutdown /s /t 0, , Hide
+    } else if (UserInput = "pen") {
+        Run, "C:\Users\Julius\Documents\_DevDrive\Weylus\weylus.exe"
+    } else if (UserInput = "gh" ) {
+        Run, https://github.com/SnapBanane    
     } else {
         Run, https://www.google.com/search?q=%UserInput%
     }
